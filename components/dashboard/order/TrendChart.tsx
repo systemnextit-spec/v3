@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 
 interface TrendChartProps {
   visitorData?: number[][];
@@ -5,25 +6,47 @@ interface TrendChartProps {
 }
 
 export const TrendChart = ({ 
-  visitorData = [[0, 0], [5, 32], [10, 32], [16, 68], [22, 45], [31, 88]],
-  orderData = [[0, 0], [6, 22], [12, 26], [16, 46], [20, 38], [24, 42], [31, 82]],
+  visitorData = [[0, 0], [5, 0], [10, 0], [16, 0], [22, 0], [31, 0]],
+  orderData = [[0, 0], [6, 0], [12, 0], [16, 0], [20, 0], [24, 0], [31, 0]],
 }: TrendChartProps) => {
+  const [isAnimated, setIsAnimated] = useState(false);
+
+  // Check if there's actual data with non-zero values
+  const hasData = useMemo(() => {
+    const hasVisitorData = visitorData.some(d => d[1] > 0);
+    const hasOrderData = orderData.some(d => d[1] > 0);
+    return hasVisitorData || hasOrderData;
+  }, [visitorData, orderData]);
+
+  useEffect(() => {
+    // Only animate if there's data
+    if (hasData) {
+      const timer = setTimeout(() => setIsAnimated(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [hasData]);
+
+  // Should show animated chart only when animated AND has data
+  const showAnimated = isAnimated && hasData;
 
   // Helper to convert data points to SVG path string
   const chartHeight = 100;
   
-  const getPath = (data: number[][]) => {
+  const getPath = (data: number[][], animated: boolean) => {
     return data.map((p, i) => {
       const x = (p[0] / 31) * 400;
-      const y = chartHeight - (p[1] / 100) * chartHeight;
+      // If not animated, keep y at bottom (flat line), otherwise show actual data
+      const y = animated 
+        ? chartHeight - (p[1] / 100) * chartHeight
+        : chartHeight - 5; // Slightly above bottom for visibility
       return `${i === 0 ? 'M' : 'L'}${x},${y}`;
     }).join(' ');
   };
 
   const getAreaPath = (linePath: string) => `${linePath} L400,${chartHeight} L0,${chartHeight} Z`;
 
-  const visitorLine = getPath(visitorData);
-  const orderLine = getPath(orderData);
+  const visitorLine = getPath(visitorData, showAnimated);
+  const orderLine = getPath(orderData, showAnimated);
   
   const yAxisValues = [100, 75, 50, 25, 0];
 
@@ -71,11 +94,11 @@ export const TrendChart = ({
               </linearGradient>
             </defs>
 
-            <path d={getAreaPath(visitorLine)} fill="url(#visitorArea)" />
-            <path d={getAreaPath(orderLine)} fill="url(#orderArea)" />
+            <path d={getAreaPath(visitorLine)} fill="url(#visitorArea)" style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+            <path d={getAreaPath(orderLine)} fill="url(#orderArea)" style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)', transitionDelay: '0.15s' }} />
 
-            <path d={visitorLine} fill="none" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="2,2" />
-            <path d={orderLine} fill="none" stroke="#FF8A00" strokeWidth="1.5" strokeDasharray="2,2" />
+            <path d={visitorLine} fill="none" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="2,2" style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+            <path d={orderLine} fill="none" stroke="#FF8A00" strokeWidth="1.5" strokeDasharray="2,2" style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)', transitionDelay: '0.15s' }} />
           </svg>
         </div>
       </div>

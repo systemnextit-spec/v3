@@ -199,6 +199,13 @@ const FigmaBusinessReport: React.FC<FigmaBusinessReportProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('profit');
   const [dateRange, setDateRange] = useState<DateRangeType>('month');
+  const [chartAnimated, setChartAnimated] = useState(false);
+
+  // Chart animation effect - starts flat, then animates to curved
+  useEffect(() => {
+    const timer = setTimeout(() => setChartAnimated(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
   const [customDateRange, setCustomDateRange] = useState<DateRange>({ startDate: null, endDate: null });
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
@@ -747,15 +754,27 @@ const FigmaBusinessReport: React.FC<FigmaBusinessReportProps> = ({
                   <span>$0</span>
                 </div>
                 <div className="absolute left-[55px] right-0 top-0 bottom-[20px]">
-                  {/* Green line (Selling Price) */}
+                  {/* Green line (Selling Price) - Animated from flat to curved when data exists */}
                   <svg width="100%" height="100%" viewBox="0 0 400 100" preserveAspectRatio="none" className="absolute inset-0">
-                    <path d="M0,80 C50,70 100,50 150,40 C200,30 250,25 300,20 C350,15 400,10 400,10" 
-                          stroke="#00c80d" strokeWidth="2" fill="none" />
+                    <path 
+                      d={(chartAnimated && summary.totalRevenue > 0)
+                        ? "M0,80 C50,70 100,50 150,40 C200,30 250,25 300,20 C350,15 400,10 400,10" 
+                        : "M0,95 C50,95 100,95 150,95 C200,95 250,95 300,95 C350,95 400,95 400,95"
+                      }
+                      stroke="#00c80d" strokeWidth="2" fill="none" 
+                      style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                    />
                   </svg>
-                  {/* Orange line (Cost Price) */}
+                  {/* Orange line (Cost Price) - Animated from flat to curved when data exists */}
                   <svg width="100%" height="100%" viewBox="0 0 400 100" preserveAspectRatio="none" className="absolute inset-0">
-                    <path d="M0,90 C50,85 100,70 150,60 C200,50 250,45 300,35 C350,30 400,25 400,20" 
-                          stroke="#f59f0a" strokeWidth="2" fill="none" />
+                    <path 
+                      d={(chartAnimated && summary.purchaseCost > 0)
+                        ? "M0,90 C50,85 100,70 150,60 C200,50 250,45 300,35 C350,30 400,25 400,20" 
+                        : "M0,95 C50,95 100,95 150,95 C200,95 250,95 300,95 C350,95 400,95 400,95"
+                      }
+                      stroke="#f59f0a" strokeWidth="2" fill="none" 
+                      style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)', transitionDelay: '0.2s' }}
+                    />
                   </svg>
                 </div>
                 <div className="absolute left-[55px] right-0 bottom-0 flex justify-between text-[10px] text-[#131313]/50 font-['Poppins']">
@@ -786,24 +805,34 @@ const FigmaBusinessReport: React.FC<FigmaBusinessReportProps> = ({
                   <span>$0</span>
                 </div>
                 <div className="absolute left-[45px] right-0 top-0 bottom-[20px]">
-                  {/* Gradient area fill */}
+                  {/* Gradient area fill - Animated from flat to curved when data exists */}
                   <svg width="100%" height="100%" viewBox="0 0 400 100" preserveAspectRatio="none" className="absolute inset-0">
                     <defs>
-                      <linearGradient id="profitGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <linearGradient id="profitGradientFigma" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.3"/>
                         <stop offset="100%" stopColor="#1e90ff" stopOpacity="0.05"/>
                       </linearGradient>
-                    </defs>
-                    <path d="M0,90 C50,85 100,80 150,75 C200,70 250,60 300,50 C350,40 400,25 400,20 L400,100 L0,100 Z" 
-                          fill="url(#profitGradient)" />
-                    <path d="M0,90 C50,85 100,80 150,75 C200,70 250,60 300,50 C350,40 400,25 400,20" 
-                          stroke="url(#profitLineGradient)" strokeWidth="3" fill="none" />
-                    <defs>
-                      <linearGradient id="profitLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <linearGradient id="profitLineGradientFigma" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#38bdf8"/>
                         <stop offset="100%" stopColor="#1e90ff"/>
                       </linearGradient>
                     </defs>
+                    <path 
+                      d={(chartAnimated && summary.profitFromSell > 0)
+                        ? "M0,90 C50,85 100,80 150,75 C200,70 250,60 300,50 C350,40 400,25 400,20 L400,100 L0,100 Z" 
+                        : "M0,95 C50,95 100,95 150,95 C200,95 250,95 300,95 C350,95 400,95 400,95 L400,100 L0,100 Z"
+                      }
+                      fill="url(#profitGradientFigma)" 
+                      style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                    />
+                    <path 
+                      d={(chartAnimated && summary.profitFromSell > 0)
+                        ? "M0,90 C50,85 100,80 150,75 C200,70 250,60 300,50 C350,40 400,25 400,20" 
+                        : "M0,95 C50,95 100,95 150,95 C200,95 250,95 300,95 C350,95 400,95 400,95"
+                      }
+                      stroke="url(#profitLineGradientFigma)" strokeWidth="3" fill="none" 
+                      style={{ transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                    />
                   </svg>
                 </div>
                 <div className="absolute left-[45px] right-0 bottom-0 flex justify-between text-[10px] text-[#131313]/50 font-['Poppins']">
