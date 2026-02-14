@@ -89,7 +89,14 @@ export const createTenant = async (payload: CreateTenantPayload): Promise<Tenant
     createdAt: now,
     updatedAt: now,
     branding: {},
-    settings: {}
+    settings: {},
+    // Initialize subscription for 30-day package
+    subscription: {
+      packageStartDate: now,
+      packageDays: 30,
+      gracePeriodDays: 7,
+      isBlocked: false,
+    },
   };
 
   const result = await collection.insertOne(tenant);

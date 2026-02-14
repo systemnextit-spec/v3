@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import RenewSubscription from '../components/dashboard/RenewSubscription';
 import {
   CreditCard,
   Calendar,
@@ -462,6 +463,7 @@ const AdminBilling: React.FC<AdminBillingProps> = ({ tenant, onUpgrade }) => {
   const [appTitle, setAppTitle] = useState('');
   const [appDescription, setAppDescription] = useState('');
   const [isSubmittingAppRequest, setIsSubmittingAppRequest] = useState(false);
+  const [showRenewModal, setShowRenewModal] = useState(false);
   
   // Ads carousel state
   const [ads, setAds] = useState<Array<{ id: string; imageUrl: string; linkUrl?: string; title?: string }>>([]);
@@ -753,7 +755,7 @@ const AdminBilling: React.FC<AdminBillingProps> = ({ tenant, onUpgrade }) => {
                         : { ...figmaStyles.subscribeButtonFilled, backgroundColor: plan.buttonColor }
                       ),
                     }}
-                    onClick={() => window.open('https://systemnextit.com', '_blank')}
+                    onClick={() => setShowRenewModal(true)}
                     >
                     SUBSCRIBE NOW
                   </button>
@@ -933,6 +935,14 @@ const AdminBilling: React.FC<AdminBillingProps> = ({ tenant, onUpgrade }) => {
           </div>
         </div>
       </div>
+
+      {/* Renew Subscription Modal */}
+      {showRenewModal && (
+        <RenewSubscription 
+          isOpen={showRenewModal}
+          onClose={() => setShowRenewModal(false)}
+        />
+      )}
     </div>
   );
 };

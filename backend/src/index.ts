@@ -40,6 +40,8 @@ import faviconRouter from './routes/favicon';
 import aiAssistantRouter from './routes/aiAssistant';
 import smsRouter from './routes/sms';
 import imageSearchRouter from './routes/imageSearch';
+import { checkTenantSubscription, addSubscriptionHeaders } from './middleware/subscriptionCheck';
+import { subscriptionRouter } from './routes/subscription';
 
 const app = express();
 const httpServer = createServer(app);
@@ -179,6 +181,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// Subscription check middleware - blocks API calls for expired tenants
+app.use(checkTenantSubscription);
+
+// Add subscription status headers to responses
+app.use(addSubscriptionHeaders);
+
 // Serve static files for uploaded images
 // Use image optimization route first (handles ?w=&q= params)
 // Apply cache headers to uploads
@@ -213,6 +221,7 @@ app.use('/api/favicon', faviconRouter);
 app.use('/api/ai-assistant', aiAssistantRouter);
 app.use('/api/sms', smsRouter);
 app.use('/api/image-search', imageSearchRouter);
+app.use('/api/subscription', subscriptionRouter);
 app.use('/api', dueListRoutes);
 
 // Visitors tracking (import at top of file)

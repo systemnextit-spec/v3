@@ -63,6 +63,16 @@ export interface Tenant {
   currency?: string;
   branding?: TenantBranding;
   settings?: Record<string, any>;
+  // Package/Subscription Management
+  subscription?: {
+    packageStartDate: string;
+    packageDays: number;
+    gracePeriodDays: number;
+    isBlocked: boolean;
+    lastRenewalDate?: string;
+    lastNotificationShown?: string;
+    renewalDismissedAt?: string;
+  };
 }
 
 export interface CreateTenantPayload {

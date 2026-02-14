@@ -248,6 +248,39 @@ const FigmaOrderList: React.FC<FigmaOrderListProps> = ({
     };
   }, [orders]);
 
+  // Generate chart data from orders - grouped by day of current month
+  const orderChartData = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    // Initialize all days with 0
+    const ordersByDay: { [key: number]: number } = {};
+    for (let i = 1; i <= daysInMonth; i++) {
+      ordersByDay[i] = 0;
+    }
+    
+    // Count orders per day for current month
+    orders.forEach(order => {
+      const orderDate = new Date(order.createdAt || order.date || '');
+      if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
+        const day = orderDate.getDate();
+        ordersByDay[day] = (ordersByDay[day] || 0) + 1;
+      }
+    });
+    
+    // Convert to chart format [[day, value], ...]
+    // Normalize to percentage (max 100)
+    const maxOrders = Math.max(...Object.values(ordersByDay), 1);
+    const chartData: number[][] = Object.entries(ordersByDay).map(([day, count]) => [
+      parseInt(day),
+      Math.round((count / maxOrders) * 100)
+    ]);
+    
+    return chartData;
+  }, [orders]);
+
   const tabCounts = useMemo(() => ({
     all: orders.length,
     pending: orders.filter(o => o.status === 'Pending').length,
@@ -728,7 +761,7 @@ const FigmaOrderList: React.FC<FigmaOrderListProps> = ({
             </span>
           </div>
           <div className="flex-1 min-h-[180px]">
-            <TrendChart />
+            <TrendChart orderData={orderChartData} />
           </div>
         </div>
         

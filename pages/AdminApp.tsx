@@ -74,6 +74,9 @@ import AIChatAssistant from '../components/AIChatAssistant';
 import { AdminSidebar, AdminHeader } from '../components/AdminComponents';
 import AdminDueList from './AdminDueList';
 import { FigmaDashboardPage as AdminDashboard, DashboardLayout } from '../components/dashboard';
+import SubscriptionRenewalPopup from '../components/SubscriptionRenewalPopup';
+import SubscriptionNotification from '../components/SubscriptionNotification';
+import { useSubscription } from '../hooks/useSubscription';
 
 // Preload critical admin chunks on idle - only when admin view is triggered
 let adminChunksPreloaded = false;
@@ -583,6 +586,24 @@ const AdminApp: React.FC<AdminAppProps> = ({
   const headerTenants = platformOperator ? tenants : (selectedTenantRecord ? [selectedTenantRecord] : []);
   const tenantSwitcher = platformOperator ? onTenantChange : undefined;
 
+  // Subscription management - check tenant subscription status
+  const {
+    showNotification: showSubscriptionNotification,
+    showRenewalPopup,
+    dismissNotification: dismissSubscriptionNotification,
+    dismissRenewalPopup,
+    canDismissPopup,
+    handleRenew,
+    isBlocked: isSubscriptionBlocked,
+    daysRemaining,
+    daysOverdue,
+    expiryMessage,
+  } = useSubscription({
+    tenantId: activeTenantId,
+    subscription: selectedTenantRecord?.subscription as any,
+    enabled: !!selectedTenantRecord && user?.role !== 'super_admin', // Don't show to super admin
+  });
+
   const handleAddRole = async (newRole: Omit<Role, '_id' | 'id'>) => {
     try {
       await authService.createRole({
@@ -704,18 +725,42 @@ const AdminApp: React.FC<AdminAppProps> = ({
 
   return (
     <LanguageProvider tenantId={activeTenantId}>
+      {/* Subscription Renewal Popup - shows when subscription expires */}
+      <SubscriptionRenewalPopup
+        isOpen={showRenewalPopup}
+        onClose={dismissRenewalPopup}
+        onRenew={handleRenew}
+        canDismiss={canDismissPopup}
+        daysOverdue={daysOverdue}
+        isBlocked={isSubscriptionBlocked}
+        expiryMessage={expiryMessage}
+      />
+      
       {adminSection === 'dashboard' ? (
-        <AdminDashboard 
-          orders={orders} 
-          products={products} 
-          tenantId={activeTenantId}
-          tenantSubdomain={selectedTenantRecord?.subdomain || ''}
-          user={user || undefined} 
-          onNavigate={setAdminSection}
-          onLogoutClick={onLogout}
-          hasUnreadChat={hasUnreadChat}
-          onOpenAdminChat={onOpenAdminChat}
-        />
+        <>
+          {/* Subscription Notification - shows in dashboard for days 27-30 */}
+          {showSubscriptionNotification && (
+            <div style={{ position: 'fixed', top: '80px', left: '280px', right: '24px', zIndex: 9998 }}>
+              <SubscriptionNotification
+                isVisible={showSubscriptionNotification}
+                onDismiss={dismissSubscriptionNotification}
+                daysRemaining={daysRemaining}
+                onRenew={handleRenew}
+              />
+            </div>
+          )}
+          <AdminDashboard 
+            orders={orders} 
+            products={products} 
+            tenantId={activeTenantId}
+            tenantSubdomain={selectedTenantRecord?.subdomain || ''}
+            user={user || undefined} 
+            onNavigate={setAdminSection}
+            onLogoutClick={onLogout}
+            hasUnreadChat={hasUnreadChat}
+            onOpenAdminChat={onOpenAdminChat}
+          />
+        </>
       ) : (
         <AdminLayout
         onSwitchView={onSwitchToStore}
